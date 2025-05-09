@@ -15,6 +15,7 @@ type DiscordConfig struct {
 type Config struct {
 	Discord          DiscordConfig `mapstructure:"discord"`
 	MessageSendToken string        `mapstructure:"message_send_token"`
+	ListenAddr       string        `mapstructure:"listen_addr"`
 }
 
 var (
