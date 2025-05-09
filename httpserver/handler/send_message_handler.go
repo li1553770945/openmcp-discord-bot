@@ -74,6 +74,7 @@ func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		return
 	}
+	zap.S().Infof("收到发送消息请求,channelid:%d,内容:%s", messageSendReq.Channel, messageSendReq.Content)
 
 	cogs.GetMessageSendReqChan() <- &messageSendReq
 

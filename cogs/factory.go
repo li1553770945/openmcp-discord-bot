@@ -29,25 +29,27 @@ func startMessageSender(ctx context.Context, wg *sync.WaitGroup) {
 		wg.Add(1)
 		defer wg.Done()
 		var messageSendReq *model.MessageSendReq
-		select {
-		case messageSendReq = <-messageSendChan:
+		for {
+			select {
+			case messageSendReq = <-messageSendChan:
 
-			var channelId uint64
-			if messageSendReq.Channel == 0 {
-				channelId = config.GetConfig().Discord.DefaultChannel
-			} else {
-				channelId = messageSendReq.Channel
+				var channelId uint64
+				if messageSendReq.Channel == 0 {
+					channelId = config.GetConfig().Discord.DefaultChannel
+				} else {
+					channelId = messageSendReq.Channel
+				}
+				zap.S().Infof("准备发送消息到%d:%s", channelId, messageSendReq.Content)
+
+				_, err := bot.Rest().CreateMessage(snowflake.ID(channelId), discord.NewMessageCreateBuilder().SetContent(messageSendReq.Content).Build())
+				if err != nil {
+					zap.S().Errorf("发送消息到discord失败：%v", err)
+				} else {
+					zap.S().Infof("成功发送一条消息到Discord，内容:%s,频道id:%d", messageSendReq.Content, channelId)
+				}
+			case <-ctx.Done():
+				return
 			}
-
-			_, err := bot.Rest().CreateMessage(snowflake.ID(channelId), discord.NewMessageCreateBuilder().SetContent(messageSendReq.Content).Build())
-			if err != nil {
-				zap.S().Errorf("发送消息到discord失败：%v", err)
-			} else {
-				zap.S().Infof("成功发送一条消息到Discord，内容:%s,频道id:%d", messageSendReq.Content, channelId)
-			}
-		case <-ctx.Done():
-
-			return
 		}
 	}()
 }
