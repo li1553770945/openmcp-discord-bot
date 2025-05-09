@@ -20,6 +20,11 @@ var GlobalWg *sync.WaitGroup
 var GlobalStopChan chan bool
 
 func main() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Errorf("主函数发生错误导致退出：%v", err)
+		}
+	}()
 
 	logger.InitLogger("logs")
 	//从.env加载环境变量

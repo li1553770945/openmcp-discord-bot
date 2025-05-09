@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"context"
-	"fmt"
 	"github.com/li1553770945/openmcp-discord-bot/httpserver/handler"
 	"github.com/li1553770945/openmcp-discord-bot/infra/config"
 	"go.uber.org/zap"
@@ -26,9 +25,9 @@ func StartHttpServer(ctx context.Context, wg *sync.WaitGroup) {
 		defer wg.Done()
 		// 启动一个子协程运行服务（因为 ListenAndServe 会阻塞）
 		go func() {
-			zap.S().Infof("http监听启动，地址为:%s", server.Addr)
+			zap.S().Infof("http监听启动中，地址为:%s", server.Addr)
 			if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				panic(fmt.Sprintf("HTTP 服务启动失败: %v", err))
+				zap.S().Errorf("HTTP 服务启动失败: %v", err)
 			}
 		}()
 		// 阻塞等待退出信号
