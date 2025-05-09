@@ -29,9 +29,9 @@ func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		_, err = w.Write(bytes)
 		if err != nil {
-			return
-		} else {
 			zap.S().Errorf("发送http响应失败:%v", err)
+		} else {
+			return
 		}
 		return
 	}
@@ -49,9 +49,9 @@ func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		_, err = w.Write(bytes)
 		if err != nil {
-			return
-		} else {
 			zap.S().Errorf("发送http响应失败:%v", err)
+		} else {
+			return
 		}
 		return
 	}
@@ -70,7 +70,7 @@ func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
 		}
 		_, err = w.Write(bytes)
 		if err != nil {
-			zap.S().Errorf("发送HTTP响应失败:%v", err)
+			zap.S().Errorf("发送http响应失败:%v", err)
 		}
 		return
 	}
