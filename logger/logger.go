@@ -1,47 +1,61 @@
 package logger
 
 import (
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/lestrrat-go/file-rotatelogs"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func InitLogger(logDir string) {
-	// 确保日志目录存在
 	if err := os.MkdirAll(logDir, os.ModePerm); err != nil {
 		panic(err)
 	}
-	// 配置文本格式编码器
-	encoder := getTextEncoder()
-	// 设置两个输出目标（控制台 + 滚动文件）
+
+	// 创建两个独立encoder（关键改动点）
+	consoleEncoder := getColorfulEncoder() // 控制台：带颜色
+	fileEncoder := getPlainTextEncoder()   // 文件：无颜色
+
+	// 两个不同的输出目标
 	consoleWriter := zapcore.AddSync(os.Stdout)
 	fileWriter := getLogWriter(filepath.Join(logDir, "app.log"))
-	// 创建两个Core（核心）
-	// 控制台：调试级别+全部显示，文件：信息级别+无StackTrace
-	consoleCore := zapcore.NewCore(encoder, consoleWriter, zapcore.DebugLevel)
-	fileCore := zapcore.NewCore(encoder, fileWriter, zapcore.InfoLevel)
-	// 合并Core，创建Logger
+
+	// 分别创建Core
+	consoleCore := zapcore.NewCore(consoleEncoder, consoleWriter, zapcore.DebugLevel)
+	fileCore := zapcore.NewCore(fileEncoder, fileWriter, zapcore.InfoLevel)
+
+	// 合并Core
 	core := zapcore.NewTee(consoleCore, fileCore)
-	logger := zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.ErrorLevel))
-	// 替换Zap全局Logger和SugarLogger
+	logger := zap.New(core, zap.AddCaller())
+
+	// 替换全局实例
 	zap.ReplaceGlobals(logger)
 }
-func getTextEncoder() zapcore.Encoder {
-	// 纯文本格式（带颜色）
-	encoderConfig := zap.NewDevelopmentEncoderConfig()
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder        // 时间格式
-	encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder // 彩色日志级别
-	return zapcore.NewConsoleEncoder(encoderConfig)
+
+// 控制台编码器（带颜色）
+func getColorfulEncoder() zapcore.Encoder {
+	conf := zap.NewDevelopmentEncoderConfig()
+	conf.EncodeTime = zapcore.ISO8601TimeEncoder
+	conf.EncodeLevel = zapcore.CapitalColorLevelEncoder // 关键颜色配置
+	return zapcore.NewConsoleEncoder(conf)
 }
+
+// 文件编码器（无颜色纯文本）
+func getPlainTextEncoder() zapcore.Encoder {
+	conf := zap.NewDevelopmentEncoderConfig()
+	conf.EncodeTime = zapcore.ISO8601TimeEncoder
+	conf.EncodeLevel = zapcore.CapitalLevelEncoder // 关键去颜色配置
+	return zapcore.NewConsoleEncoder(conf)
+}
+
 func getLogWriter(logPath string) zapcore.WriteSyncer {
-	// 滚动日志配置（按天分割，保留7天）
 	rotator, err := rotatelogs.New(
 		logPath+".%Y%m%d",
-		rotatelogs.WithLinkName(logPath),      // 生成软链
-		rotatelogs.WithMaxAge(7*24*time.Hour), // 保留7天
+		rotatelogs.WithLinkName(logPath),
+		rotatelogs.WithMaxAge(7*24*time.Hour),
 		rotatelogs.WithRotationTime(24*time.Hour),
 	)
 	if err != nil {

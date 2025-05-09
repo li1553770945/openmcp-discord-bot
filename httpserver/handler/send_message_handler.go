@@ -12,13 +12,28 @@ import (
 )
 
 func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
-
 	response := &model.BasicResponse{
 		Code:    0,
 		Message: "",
+	}
+
+	if req.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		response.Code = constant.MethodNotAllowed
+		response.Message = "不支持的请求方式"
+		zap.S().Infof("不支持的请求方式:%v", req.Method)
+		bytes, err := json.Marshal(response)
+		if err != nil {
+			zap.S().Errorf("构造http响应失败:%v", err)
+			return
+		}
+		_, err = w.Write(bytes)
+		if err != nil {
+			return
+		} else {
+			zap.S().Errorf("发送http响应失败:%v", err)
+		}
+		return
 	}
 
 	token := req.Header.Get("Authorization")

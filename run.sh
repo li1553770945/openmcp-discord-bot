@@ -17,4 +17,4 @@ nohup ./openmcp-discord  > /dev/null 2>&1 &
 
 # 将新的 PID 保存到 pid.txt
 echo $! > pid.txt
-echo "New process started with PID $(cat pid.txt)"
+echo "已启动进程，PID为：$(cat pid.txt)"
