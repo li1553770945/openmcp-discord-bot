@@ -3,8 +3,8 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"github.com/bytedance/gopkg/util/logger"
 	"github.com/li1553770945/openmcp-discord-bot/httpserver/handler"
+	"go.uber.org/zap"
 	"net/http"
 	"sync"
 	"time"
@@ -37,7 +37,7 @@ func StartHttpServer(ctx context.Context, wg *sync.WaitGroup) {
 		defer cancel()
 
 		if err := server.Shutdown(shutdownCtx); err != nil {
-			logger.Errorf("HTTP 服务关闭错误: %v", err)
+			zap.S().Errorf("HTTP 服务关闭错误: %v", err)
 		}
 	}()
 }

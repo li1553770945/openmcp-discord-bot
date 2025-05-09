@@ -2,8 +2,8 @@ package config
 
 import (
 	"fmt"
-	"github.com/bytedance/gopkg/util/logger"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"strings"
 	"sync"
 )
@@ -36,7 +36,7 @@ func InitConfig(configDir, configFile, configSuffix string) error {
 		if err = viper.ReadInConfig(); err != nil {
 			err = fmt.Errorf("无法读取配置文件: %w", err)
 		}
-		logger.Infof("读取到的所有配置keys：%v", viper.AllKeys())
+		zap.S().Infof("读取到的所有配置keys：%v", viper.AllKeys())
 		globalConfig = &Config{}
 		if err = viper.Unmarshal(&globalConfig); err != nil {
 			err = fmt.Errorf("无法反序列化配置文件: %w", err)

@@ -4,11 +4,12 @@ package main
 
 import (
 	"context"
-	"github.com/bytedance/gopkg/util/logger"
 	"github.com/joho/godotenv"
 	"github.com/li1553770945/openmcp-discord-bot/cogs"
 	"github.com/li1553770945/openmcp-discord-bot/httpserver"
 	configInfra "github.com/li1553770945/openmcp-discord-bot/infra/config"
+	"github.com/li1553770945/openmcp-discord-bot/logger"
+	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"sync"
@@ -19,6 +20,8 @@ var GlobalWg *sync.WaitGroup
 var GlobalStopChan chan bool
 
 func main() {
+
+	logger.InitLogger("logs")
 	//从.env加载环境变量
 	err := godotenv.Load()
 	if err != nil {
@@ -30,7 +33,7 @@ func main() {
 	if err != nil {
 		panic("加载配置文件失败")
 	}
-	logger.Infof("配置加载成功")
+	zap.S().Info("配置加载成功")
 
 	GlobalWg = new(sync.WaitGroup)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -41,15 +44,16 @@ func main() {
 	cfg := configInfra.GetConfig()
 	cogs.InitGlobalBot(cfg.Discord.Token, ctx, GlobalWg)
 
-	logger.Info("机器人服务与http服务均开始运行，按下CTRL-C退出")
+	zap.S().Info("机器人服务与http服务均开始运行，按下CTRL-C退出")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
-	logger.Infof("收到退出信号，正在执行优雅退出")
+	zap.S().Infof("收到退出信号，正在执行优雅退出")
 
 	cancel()
 
 	GlobalWg.Wait()
 
+	zap.S().Infof("已正常退出")
 }

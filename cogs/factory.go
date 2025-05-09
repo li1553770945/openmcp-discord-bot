@@ -2,7 +2,6 @@ package cogs
 
 import (
 	"context"
-	"github.com/bytedance/gopkg/util/logger"
 	"github.com/disgoorg/disgo"
 	disgobot "github.com/disgoorg/disgo/bot"
 	"github.com/disgoorg/disgo/discord"
@@ -11,6 +10,7 @@ import (
 	"github.com/disgoorg/snowflake/v2"
 	"github.com/li1553770945/openmcp-discord-bot/cogs/model"
 	"github.com/li1553770945/openmcp-discord-bot/infra/config"
+	"go.uber.org/zap"
 	"log"
 	"sync"
 )
@@ -41,7 +41,9 @@ func startMessageSender(ctx context.Context, wg *sync.WaitGroup) {
 
 			_, err := bot.Rest().CreateMessage(snowflake.ID(channelId), discord.NewMessageCreateBuilder().SetContent(messageSendReq.Content).Build())
 			if err != nil {
-				logger.Errorf("发送消息到discord失败：%v", err)
+				zap.S().Errorf("发送消息到discord失败：%v", err)
+			} else {
+				zap.S().Infof("成功发送一条消息到Discord，内容:%s,频道id:%d", messageSendReq.Content, channelId)
 			}
 		case <-ctx.Done():
 
