@@ -1,0 +1,4 @@
+discord:
+  token: ""
+  default_channel: ""
+message_send_token: ""

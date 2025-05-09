@@ -3,12 +3,53 @@
 package main
 
 import (
-	"github.com/cloudwego/hertz/pkg/app/server"
+	"context"
+	"github.com/bytedance/gopkg/util/logger"
+	"github.com/joho/godotenv"
+	"github.com/li1553770945/openmcp-discord-bot/cogs"
+	"github.com/li1553770945/openmcp-discord-bot/httpserver"
+	configInfra "github.com/li1553770945/openmcp-discord-bot/infra/config"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
-func main() {
-	h := server.Default()
+var GlobalWg *sync.WaitGroup
+var GlobalStopChan chan bool
 
-	register(h)
-	h.Spin()
+func main() {
+	//从.env加载环境变量
+	err := godotenv.Load()
+	if err != nil {
+		panic("无法获取.env环境变量")
+	}
+
+	//加载配置
+	err = configInfra.InitConfig("config", "config", "yaml")
+	if err != nil {
+		panic("加载配置文件失败")
+	}
+	logger.Infof("配置加载成功")
+
+	GlobalWg = new(sync.WaitGroup)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	//启动http服务器
+	httpserver.StartHttpServer(ctx, GlobalWg)
+
+	cfg := configInfra.GetConfig()
+	cogs.InitGlobalBot(cfg.Discord.Token, ctx, GlobalWg)
+
+	logger.Info("机器人服务与http服务均开始运行，按下CTRL-C退出")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	<-sc
+
+	logger.Infof("收到退出信号，正在执行优雅退出")
+
+	cancel()
+
+	GlobalWg.Wait()
+
 }
