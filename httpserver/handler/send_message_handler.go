@@ -3,16 +3,16 @@ package handler
 import (
 	"encoding/json"
 	"github.com/li1553770945/openmcp-discord-bot/cogs"
-	model2 "github.com/li1553770945/openmcp-discord-bot/cogs/model"
+	cogsmodel "github.com/li1553770945/openmcp-discord-bot/cogs/model"
 	"github.com/li1553770945/openmcp-discord-bot/httpserver/constant"
-	"github.com/li1553770945/openmcp-discord-bot/httpserver/model"
+	httpmodel "github.com/li1553770945/openmcp-discord-bot/httpserver/model"
 	"github.com/li1553770945/openmcp-discord-bot/infra/config"
 	"go.uber.org/zap"
 	"net/http"
 )
 
 func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
-	response := &model.BasicResponse{
+	response := &httpmodel.BasicResponse{
 		Code:    0,
 		Message: "",
 	}
@@ -57,7 +57,7 @@ func SendMessageHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	// 解析请求体中的JSON数据
-	var messageSendReq model2.MessageSendReq
+	var messageSendReq cogsmodel.MessageSendReq
 	err := json.NewDecoder(req.Body).Decode(&messageSendReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

@@ -12,6 +12,7 @@ import (
 	"github.com/li1553770945/openmcp-discord-bot/infra/config"
 	"go.uber.org/zap"
 	"log"
+	"strconv"
 	"sync"
 )
 
@@ -34,10 +35,15 @@ func startMessageSender(ctx context.Context, wg *sync.WaitGroup) {
 			case messageSendReq = <-messageSendChan:
 
 				var channelId uint64
-				if messageSendReq.Channel == 0 {
+				if messageSendReq.Channel == "" {
 					channelId = config.GetConfig().Discord.DefaultChannel
 				} else {
-					channelId = messageSendReq.Channel
+					intNum, err := strconv.Atoi(messageSendReq.Channel)
+					if err != nil {
+						zap.S().Warnf("无法将%s转化为int:%v", messageSendReq.Channel, err)
+						continue
+					}
+					channelId = uint64(intNum)
 				}
 				zap.S().Infof("准备发送消息到%d:%s", channelId, messageSendReq.Content)
 
